@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:16-alpine # Versão mais atualizada do PostgreSQL
+    container_name: nexti_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432" # PostgreSQL na porta 5432
+    environment:
+      POSTGRES_DB: nexti_db
+      POSTGRES_USER: nexti_user
+      POSTGRES_PASSWORD: nexti_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - nexti_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexti_user -d nexti_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Volumes para persistência
+volumes:
+  postgres_data:
+    driver: local
+
+# Network
+networks:
+  nexti_network:
+    driver: bridge
