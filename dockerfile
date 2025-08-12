@@ -8,8 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Instalar dependências
-RUN npm ci --only=production && npm cache clean --force
+# Instala todas as dependências (incluindo dev) para build
+RUN npm ci
 
 # Copiar código fonte
 COPY . .
@@ -19,6 +19,9 @@ RUN npx prisma generate
 
 # Compilar TypeScript
 RUN npm run build
+
+# Remove dependências de desenvolvimento para produção
+RUN npm prune --production && npm cache clean --force
 
 # Criar usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs
