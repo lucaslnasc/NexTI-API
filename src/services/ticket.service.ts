@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { CreateTicketType, TicketFiltersType, UpdateTicketStatusType } from '../schemas/ticket.schema';
-import { prisma } from './database.service';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Service para gerenciar tickets

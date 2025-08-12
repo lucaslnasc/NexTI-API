@@ -64,5 +64,4 @@ Thumbs.db
 
 # Prisma
 .env
-prisma/migrations/*
-!prisma/migrations/.gitkeep
+

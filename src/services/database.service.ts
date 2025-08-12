@@ -1,11 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 /**
  * Cliente global do Prisma para conexão com o banco de dados
+ * Instância importada de lib/prisma.ts
  */
-export const prisma = new PrismaClient({
-  log: ['error', 'warn'],
-});
 
 /**
  * Função para conectar ao banco de dados

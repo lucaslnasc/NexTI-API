@@ -3,7 +3,11 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 import { healthRoutes } from './routes/health.routes';
 import { ticketRoutes } from './routes/ticket.routes';
-import { userRoutes } from './routes/user.routes';
+import { createUser } from './routes/user/create-user';
+import { deleteUser } from './routes/user/delete-user';
+import { getUserById } from './routes/user/get-user-by-id';
+import { getUsers } from './routes/user/get-users';
+import { updateUser } from './routes/user/update-user';
 import { connectDatabase, disconnectDatabase } from './services/database.service';
 
 /**
@@ -42,7 +46,11 @@ async function setupServer() {
     // Registra as rotas
     await server.register(healthRoutes);
     await server.register(ticketRoutes);
-    await server.register(userRoutes);
+    await server.register(createUser);
+    await server.register(getUsers);
+    await server.register(getUserById);
+    await server.register(updateUser);
+    await server.register(deleteUser);
 
     console.log('🚀 Servidor configurado com sucesso');
   } catch (error) {

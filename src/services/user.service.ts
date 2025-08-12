@@ -1,5 +1,5 @@
 import { CreateUserType, UpdateUserType } from '../schemas/user.schema';
-import { prisma } from './database.service';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Service para gerenciar usuários
