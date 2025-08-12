@@ -3,7 +3,8 @@
     "target": "ES2022",
     "module": "commonjs",
     "lib": [
-      "ES2022"
+      "ES2022",
+      "DOM"
     ],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -16,6 +17,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "types": [
+      "node"
+    ],
     "paths": {
       "@/*": [
         "src/*"
