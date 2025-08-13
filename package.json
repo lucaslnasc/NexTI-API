@@ -5,27 +5,40 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register ./src/index.ts",
-    "build": "prisma migrate deploy && tsc && tsc-alias",
+    "build": "prisma generate && prisma migrate deploy && tsc && tsc-alias",
     "start": "node dist/index.js",
+    "postinstall": "prisma generate",
     "migrate": "prisma migrate deploy",
-    "test:db": "prisma db pull && echo 'Tabelas sincronizadas com sucesso!'",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:reset": "prisma migrate reset",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset",
+    "db:push": "prisma db push",
+    "db:pull": "prisma db pull",
+    "test:db": "prisma db pull && echo 'Tabelas sincronizadas com sucesso!'",
+    "test:db:schema": "ts-node src/test-db-schema.ts",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f postgres",
     "docker:with-tools": "docker-compose --profile tools up -d",
-    "docker:reset": "docker-compose down -v && docker-compose up -d"
+    "docker:reset": "docker-compose down -v && docker-compose up -d",
+    "render:build": "echo '🚀 Iniciando build no Render...' && npm install && echo '🔧 Gerando cliente Prisma...' && prisma generate && echo '🗄️ Aplicando migrations...' && prisma migrate deploy && echo '📦 Compilando TypeScript...' && tsc && tsc-alias && echo '✅ Build concluído!'",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
   },
-  "prepare": "prisma generate",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "keywords": [
     "fastify",
     "typescript",
     "prisma",
     "postgresql",
-    "tickets"
+    "tickets",
+    "api",
+    "backend"
   ],
   "author": "",
   "license": "MIT",

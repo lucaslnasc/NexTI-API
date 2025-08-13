@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: nexti-backend
+    env: node
+    plan: starter
+    buildCommand: npm run render:build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Configure no painel do Render para segurança
+      - key: DIRECT_URL
+        sync: false # Configure no painel do Render para segurança
+      - key: N8N_WEBHOOK_URL
+        sync: false # Configure no painel do Render para segurança
+    autoDeploy: true
+    repo: https://github.com/lucaslnasc/NexTI
+    branch: main
+    rootDir: .
+    healthCheckPath: /health
