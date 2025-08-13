@@ -31,17 +31,30 @@ export class TicketService {
    * Busca todos os tickets com filtros opcionais
    */
   async getTickets(filters: TicketFiltersType) {
-    // Monta filtros para consulta
-    const { page = 1, limit = 10, status, priority, userId } = filters;
-    const query = supabase.from('tickets').select('*');
-    if (status) query.eq('status', status);
-    if (priority) query.eq('priority', priority);
-    if (userId) query.eq('user_id', userId);
-    query.order('created_at', { ascending: false });
-    query.range((page - 1) * limit, page * limit - 1);
-    const { data: tickets, error } = await query;
+    // Monta filtros para consulta e paginação
+    const page = Number(filters.page) || 1;
+    const limit = Number(filters.limit) || 10;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    let query = supabase
+      .from('tickets')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.priority) query = query.eq('priority', filters.priority);
+    if (filters.userId) query = query.eq('user_id', filters.userId);
+    const { data: tickets, error, count } = await query;
     if (error) throw new Error('Erro ao buscar tickets: ' + error.message);
-    return tickets;
+    return {
+      tickets,
+      pagination: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
+    };
   }
 
   /**
