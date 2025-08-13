@@ -21,7 +21,7 @@ model Ticket {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relacionamento com User
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("tickets")
 }

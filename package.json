@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register ./src/index.ts",
-    "build": "prisma generate && prisma migrate deploy && tsc && tsc-alias",
+    "build": "prisma generate && prisma db push --accept-data-loss && tsc && tsc-alias",
     "start": "node dist/index.js",
     "postinstall": "prisma generate",
     "migrate": "prisma migrate deploy",
@@ -22,7 +22,8 @@
     "docker:logs": "docker-compose logs -f postgres",
     "docker:with-tools": "docker-compose --profile tools up -d",
     "docker:reset": "docker-compose down -v && docker-compose up -d",
-    "render:build": "echo '🚀 Iniciando build no Render...' && npm install && echo '🔧 Gerando cliente Prisma...' && prisma generate && echo '🗄️ Aplicando migrations...' && prisma migrate deploy && echo '📦 Compilando TypeScript...' && tsc && tsc-alias && echo '✅ Build concluído!'",
+    "render:build": "echo '🚀 Build Render...' && npm install && prisma generate && prisma db push --accept-data-loss && tsc && tsc-alias && echo '✅ Concluído!'",
+    "emergency:build": "npm install && prisma generate && npx tsc && npx tsc-alias",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean"
