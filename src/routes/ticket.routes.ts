@@ -59,13 +59,12 @@ export async function ticketRoutes(fastify: FastifyInstance) {
       const filters = ticketFiltersSchema.parse(request.query);
 
       // Busca os tickets usando o service
-      const result = await ticketService.getTickets(filters);
+      const tickets = await ticketService.getTickets(filters);
 
       return reply.send({
         success: true,
         message: 'Tickets encontrados',
-        data: result.tickets,
-        pagination: result.pagination,
+        data: tickets,
       });
     } catch (error: any) {
       console.error('Erro na rota GET /api/tickets:', error);

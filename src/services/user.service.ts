@@ -1,122 +1,86 @@
+import { supabase } from '@/lib/supabase';
 import { CreateUserType, UpdateUserType } from '../schemas/user.schema';
-import { prisma } from '@/lib/prisma';
 
 /**
- * Service para gerenciar usuários
+ * Service para gerenciar usuários usando Supabase
  */
 export class UserService {
   /**
-   * Cria um novo usuário no banco de dados
+   * Cria um novo usuário na tabela 'users' do Supabase
    */
   async createUser(data: CreateUserType) {
-    try {
-      const user = await prisma.user.create({
-        data: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-        },
-      });
-
-      return user;
-    } catch (error: any) {
-      console.error('Error creating user:', error);
-      if (error.code === 'P2002') {
+    // Insere um novo usuário na tabela 'users'
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert([{ name: data.name, email: data.email, phone: data.phone }])
+      .select()
+      .single();
+    if (error) {
+      if (error.code === '23505') {
+        // Código de erro para duplicidade de email
         throw new Error('Email already exists');
       }
-      throw new Error('Internal server error while creating user');
+      throw new Error('Erro ao criar usuário: ' + error.message);
     }
+    return user;
   }
 
   /**
-   * Busca todos os usuários
+   * Busca todos os usuários da tabela 'users'
    */
   async getUsers() {
-    try {
-      const users = await prisma.user.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: {
-            select: { tickets: true },
-          },
-        },
-      });
-
-      return users;
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw new Error('Internal server error while fetching users');
-    }
+    // Seleciona todos os usuários, ordenando por data de criação
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw new Error('Erro ao buscar usuários: ' + error.message);
+    return users;
   }
 
   /**
    * Busca um usuário específico por ID
    */
   async getUserById(id: string) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id },
-        include: {
-          tickets: {
-            orderBy: { createdAt: 'desc' },
-          },
-        },
-      });
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      return user;
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      throw error;
-    }
+    // Busca usuário pelo campo 'id'
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !user) throw new Error('Usuário não encontrado');
+    return user;
   }
 
   /**
    * Atualiza um usuário
    */
   async updateUser(id: string, data: UpdateUserType) {
-    try {
-      const user = await prisma.user.update({
-        where: { id },
-        data: {
-          ...(data.name && { name: data.name }),
-          ...(data.email && { email: data.email }),
-          ...(data.phone !== undefined && { phone: data.phone }),
-        },
-      });
-
-      return user;
-    } catch (error: any) {
-      console.error('Error updating user:', error);
-      if (error.code === 'P2002') {
-        throw new Error('Email already exists');
-      }
-      if (error.code === 'P2025') {
-        throw new Error('User not found');
-      }
-      throw new Error('Internal server error while updating user');
-    }
+    // Atualiza os campos do usuário pelo 'id'
+    const { data: user, error } = await supabase
+      .from('users')
+      .update({
+        ...(data.name && { name: data.name }),
+        ...(data.email && { email: data.email }),
+        ...(data.phone !== undefined && { phone: data.phone }),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error('Erro ao atualizar usuário: ' + error.message);
+    return user;
   }
 
   /**
    * Deleta um usuário
    */
   async deleteUser(id: string) {
-    try {
-      await prisma.user.delete({
-        where: { id },
-      });
-
-      return { message: 'User deleted successfully' };
-    } catch (error: any) {
-      console.error('Error deleting user:', error);
-      if (error.code === 'P2025') {
-        throw new Error('User not found');
-      }
-      throw new Error('Internal server error while deleting user');
-    }
+    // Remove usuário pelo 'id'
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error('Erro ao deletar usuário: ' + error.message);
+    return { message: 'User deleted successfully' };
   }
 }

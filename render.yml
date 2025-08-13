@@ -10,9 +10,9 @@ services:
         value: 5000
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
+      - key: SUPABASE_URL
         sync: false # Configure no painel do Render para segurança
-      - key: DIRECT_URL
+      - key: SUPABASE_KEY
         sync: false # Configure no painel do Render para segurança
       - key: N8N_WEBHOOK_URL
         sync: false # Configure no painel do Render para segurança

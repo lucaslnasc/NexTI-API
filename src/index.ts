@@ -8,7 +8,7 @@ import { deleteUser } from './routes/user/delete-user';
 import { getUserById } from './routes/user/get-user-by-id';
 import { getUsers } from './routes/user/get-users';
 import { updateUser } from './routes/user/update-user';
-import { connectDatabase, disconnectDatabase } from './services/database.service';
+import { testDatabaseConnection } from './services/database.service';
 
 /**
  * Configuração do servidor Fastify
@@ -40,8 +40,8 @@ async function setupServer() {
       credentials: true,
     });
 
-    // Conecta ao banco de dados
-    await connectDatabase();
+    // Testa conexão ao banco de dados Supabase
+    await testDatabaseConnection();
 
     // Registra as rotas
     await server.register(healthRoutes);
@@ -85,7 +85,7 @@ async function gracefulShutdown() {
   try {
     console.log('🛑 Parando servidor...');
     await server.close();
-    await disconnectDatabase();
+    // Supabase não precisa desconectar manualmente
     console.log('✅ Servidor parado com sucesso');
     process.exit(0);
   } catch (error) {

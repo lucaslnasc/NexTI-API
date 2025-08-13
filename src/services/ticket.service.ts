@@ -1,122 +1,74 @@
+import { supabase } from '@/lib/supabase';
 import axios from 'axios';
 import { CreateTicketType, TicketFiltersType, UpdateTicketStatusType } from '../schemas/ticket.schema';
-import { prisma } from '@/lib/prisma';
 
 /**
- * Service para gerenciar tickets
+ * Service para gerenciar tickets usando Supabase
  */
 export class TicketService {
   /**
-   * Cria um novo ticket no banco de dados e envia para o webhook do n8n
+   * Cria um novo ticket na tabela 'tickets' e envia para o webhook do n8n
    */
   async createTicket(data: CreateTicketType) {
-    try {
-      // Salva o ticket no banco de dados
-      const ticket = await prisma.ticket.create({
-        data: {
-          userId: data.userId,
-          message: data.message,
-          priority: data.priority || 'normal',
-          status: 'open',
-        },
-        include: {
-          user: true, // Inclui dados do usuário
-        },
-      });
-
-      // Envia para o webhook do n8n (se configurado)
-      await this.sendToN8nWebhook(ticket);
-
-      return ticket;
-    } catch (error) {
-      console.error('Error creating ticket:', error);
-      throw new Error('Internal server error while creating ticket');
-    }
+    // Insere um novo ticket na tabela 'tickets'
+    const { data: ticket, error } = await supabase
+      .from('tickets')
+      .insert([{
+        user_id: data.userId,
+        message: data.message,
+        priority: data.priority || 'normal',
+        status: 'open',
+      }])
+      .select()
+      .single();
+    if (error) throw new Error('Erro ao criar ticket: ' + error.message);
+    // Envia para o webhook do n8n (se configurado)
+    await this.sendToN8nWebhook(ticket);
+    return ticket;
   }
 
   /**
    * Busca todos os tickets com filtros opcionais
    */
   async getTickets(filters: TicketFiltersType) {
-    try {
-      const { page, limit, status, priority, userId } = filters;
-
-      const skip = (page - 1) * limit;
-
-      const where: any = {};
-      if (status) where.status = status;
-      if (priority) where.priority = priority;
-      if (userId) where.userId = userId;
-
-      const [tickets, total] = await Promise.all([
-        prisma.ticket.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            user: true, // Inclui dados do usuário
-          },
-        }),
-        prisma.ticket.count({ where }),
-      ]);
-
-      return {
-        tickets,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-      };
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      throw new Error('Internal server error while fetching tickets');
-    }
+    // Monta filtros para consulta
+    const { page = 1, limit = 10, status, priority, userId } = filters;
+    const query = supabase.from('tickets').select('*');
+    if (status) query.eq('status', status);
+    if (priority) query.eq('priority', priority);
+    if (userId) query.eq('user_id', userId);
+    query.order('created_at', { ascending: false });
+    query.range((page - 1) * limit, page * limit - 1);
+    const { data: tickets, error } = await query;
+    if (error) throw new Error('Erro ao buscar tickets: ' + error.message);
+    return tickets;
   }
 
   /**
    * Busca um ticket específico por ID
    */
   async getTicketById(id: string) {
-    try {
-      const ticket = await prisma.ticket.findUnique({
-        where: { id },
-        include: {
-          user: true, // Inclui dados do usuário
-        },
-      });
-
-      if (!ticket) {
-        throw new Error('Ticket not found');
-      }
-
-      return ticket;
-    } catch (error) {
-      console.error('Error fetching ticket:', error);
-      throw error;
-    }
+    const { data: ticket, error } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !ticket) throw new Error('Ticket não encontrado');
+    return ticket;
   }
 
   /**
    * Atualiza o status de um ticket
    */
   async updateTicketStatus(id: string, data: UpdateTicketStatusType) {
-    try {
-      const ticket = await prisma.ticket.update({
-        where: { id },
-        data: { status: data.status },
-        include: {
-          user: true, // Inclui dados do usuário
-        },
-      });
-
-      return ticket;
-    } catch (error) {
-      console.error('Error updating ticket status:', error);
-      throw new Error('Internal server error while updating ticket');
-    }
+    const { data: ticket, error } = await supabase
+      .from('tickets')
+      .update({ status: data.status })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error('Erro ao atualizar ticket: ' + error.message);
+    return ticket;
   }
 
   /**
@@ -124,29 +76,15 @@ export class TicketService {
    */
   private async sendToN8nWebhook(ticket: any) {
     const webhookUrl = process.env.N8N_WEBHOOK_URL;
-
     if (!webhookUrl) {
       console.warn('N8n webhook URL not configured');
       return;
     }
-
     try {
-      await axios.post(webhookUrl, {
-        ticketId: ticket.id,
-        userId: ticket.userId,
-        message: ticket.message,
-        status: ticket.status,
-        priority: ticket.priority,
-        createdAt: ticket.createdAt,
-        user: ticket.user,
-      }, {
-        timeout: 5000, // 5 segundos de timeout
-      });
-
+      await axios.post(webhookUrl, ticket, { timeout: 5000 });
       console.log(`Ticket ${ticket.id} sent to n8n webhook`);
     } catch (error) {
       console.error('Error sending ticket to n8n webhook:', error);
-      // Não relança o erro para não falhar a criação do ticket
     }
   }
 }

@@ -1,54 +1,67 @@
 // Repositório responsável por acessar o banco de dados para entidades de usuário
 // Aqui ficam apenas as operações diretas com o Prisma
-import { prisma } from '@/lib/prisma'
-import { CreateUserType, UpdateUserType } from '../schemas/user.schema'
+import { supabase } from '@/lib/supabase';
+import { CreateUserType, UpdateUserType } from '../schemas/user.schema';
 
+/**
+ * Repositório de usuário usando Supabase
+ */
 export class UserRepository {
-  // Cria um novo usuário
+  /** Cria um novo usuário */
   async create(data: CreateUserType) {
-    return prisma.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-      },
-    })
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert([{ name: data.name, email: data.email, phone: data.phone }])
+      .select()
+      .single();
+    if (error) throw new Error('Erro ao criar usuário: ' + error.message);
+    return user;
   }
 
-  // Busca todos os usuários
+  /** Busca todos os usuários */
   async findAll() {
-    return prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: { select: { tickets: true } },
-      },
-    })
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw new Error('Erro ao buscar usuários: ' + error.message);
+    return users;
   }
 
-  // Busca usuário por ID
+  /** Busca usuário por ID */
   async findById(id: string) {
-    return prisma.user.findUnique({
-      where: { id },
-      include: {
-        tickets: { orderBy: { createdAt: 'desc' } },
-      },
-    })
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !user) throw new Error('Usuário não encontrado');
+    return user;
   }
 
-  // Atualiza usuário
+  /** Atualiza usuário */
   async update(id: string, data: UpdateUserType) {
-    return prisma.user.update({
-      where: { id },
-      data: {
+    const { data: user, error } = await supabase
+      .from('users')
+      .update({
         ...(data.name && { name: data.name }),
         ...(data.email && { email: data.email }),
         ...(data.phone !== undefined && { phone: data.phone }),
-      },
-    })
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error('Erro ao atualizar usuário: ' + error.message);
+    return user;
   }
 
-  // Deleta usuário
+  /** Deleta usuário */
   async delete(id: string) {
-    return prisma.user.delete({ where: { id } })
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error('Erro ao deletar usuário: ' + error.message);
+    return { message: 'User deleted successfully' };
   }
 }
