@@ -21,7 +21,7 @@ export class UserRepository {
         created_at: data.created_at,
         updated_at: data.updated_at
       }])
-      .select()
+      .select('id, name, email, phone, role, department, status, created_at, updated_at')
       .single();
     if (error) {
       if (error.message.includes('users_email_key')) {
@@ -36,7 +36,7 @@ export class UserRepository {
   async findAll() {
     const { data: users, error } = await supabase
       .from('users')
-      .select('*')
+      .select('id, name, email, phone, role, department, status, created_at, updated_at')
       .order('created_at', { ascending: false });
     if (error) throw new Error('Erro ao buscar usuários: ' + error.message);
     return users;
@@ -46,7 +46,7 @@ export class UserRepository {
   async findById(id: string) {
     const { data: user, error } = await supabase
       .from('users')
-      .select('*')
+      .select('id, name, email, phone, role, department, status, created_at, updated_at')
       .eq('id', id)
       .single();
     if (error || !user) throw new Error('Usuário não encontrado');
@@ -63,7 +63,7 @@ export class UserRepository {
         ...(data.phone !== undefined && { phone: data.phone }),
       })
       .eq('id', id)
-      .select()
+      .select('id, name, email, phone, role, department, status, created_at, updated_at')
       .single();
     if (error) throw new Error('Erro ao atualizar usuário: ' + error.message);
     return user;
