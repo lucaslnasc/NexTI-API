@@ -7,9 +7,11 @@ export const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be at most 100 characters'),
   email: z.string().email('Email must be valid'),
   phone: z.string().optional(),
-  role: z.string().optional(),
+  role: z.string().default('colaborador'),
   department: z.string().optional(),
-  status: z.string().optional(),
+  status: z.string().default('active'),
+  created_at: z.string().datetime().default(() => new Date().toISOString()),
+  updated_at: z.string().datetime().default(() => new Date().toISOString()),
 });
 
 /**

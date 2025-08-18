@@ -17,7 +17,9 @@ export class UserRepository {
         phone: data.phone,
         role: data.role,
         department: data.department,
-        status: data.status
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       }])
       .select()
       .single();
