@@ -1,14 +1,14 @@
 # NexTI Backend
 
-Backend em Node.js com TypeScript para sistema de gerenciamento de tickets.
+Backend em Node.js com TypeScript para gerenciamento de tickets, arquitetura limpa, Supabase e integração n8n.
 
 ## 🚀 Tecnologias
 
 - **Node.js** - Runtime JavaScript
 - **TypeScript** - Superset do JavaScript com tipagem estática
 - **Fastify** - Framework web rápido e eficiente
-- **Prisma ORM** - ORM moderno para TypeScript/JavaScript
-- **PostgreSQL 16** - Banco de dados relacional
+- **Supabase** - Backend as a Service (PostgreSQL, autenticação, storage)
+- **PostgreSQL** - Banco de dados relacional
 - **Docker** - Containerização para desenvolvimento
 - **Zod** - Biblioteca de validação de schemas
 - **n8n Integration** - Integração com webhooks do n8n
@@ -18,25 +18,19 @@ Backend em Node.js com TypeScript para sistema de gerenciamento de tickets.
 ```
 backend/
 ├── src/
+│   ├── controllers/      # Controllers HTTP
+│   ├── repositories/     # Repositórios de acesso ao banco
 │   ├── routes/           # Rotas do Fastify
 │   │   ├── health.routes.ts
 │   │   ├── ticket.routes.ts
-│   │   └── user.routes.ts
+│   │   └── user/
 │   ├── schemas/          # Schemas de validação com Zod
-│   │   ├── ticket.schema.ts
-│   │   └── user.schema.ts
-│   ├── services/         # Lógica de negócios
-│   │   ├── database.service.ts
-│   │   ├── ticket.service.ts
-│   │   └── user.service.ts
-│   └── index.ts          # Ponto de entrada da aplicação
-├── prisma/
-│   ├── migrations/       # Migrações do banco de dados
-│   └── schema.prisma     # Schema do Prisma
+│   ├── services/         # Regras de negócio
+│   ├── usecases/         # Orquestração de regras
+│   └── index.ts          # Ponto de entrada
 ├── docker-compose.yml    # Configuração do PostgreSQL
 ├── dockerfile            # Build da aplicação
 ├── .env                  # Variáveis de ambiente
-├── .env.example          # Exemplo de configuração
 └── package.json          # Dependências e scripts
 ```
 
@@ -60,9 +54,11 @@ npm install
 Copie o arquivo `.env.example` para `.env`:
 
 ```env
+API_HOST=https://nexti-api.onrender.com
 PORT=5000
-DATABASE_URL="postgresql://nexti_user:nexti_password@localhost:5432/nexti_db?schema=public"
-N8N_WEBHOOK_URL="https://webhook.site/#!/your-unique-id"
+SUPABASE_URL="https://xxxx.supabase.co"
+SUPABASE_KEY="sua-chave"
+N8N_WEBHOOK_URL="https://your-n8n-instance.com/webhook/tickets"
 ```
 
 ### 3. Suba o banco de dados PostgreSQL
@@ -75,20 +71,7 @@ npm run docker:up
 docker ps
 ```
 
-### 4. Configure o banco de dados
-
-```bash
-# Gerar o cliente Prisma
-npm run db:generate
-
-# Executar migrações
-npm run db:migrate
-
-# (Opcional) Visualizar dados no Prisma Studio
-npm run db:studio
-```
-
-### 5. Execute a aplicação
+### 4. Execute a aplicação
 
 ```bash
 # Modo desenvolvimento (com hot reload)
@@ -101,23 +84,9 @@ npm run build
 npm start
 ```
 
-## 🐳 Scripts Docker
-
-```bash
-# Subir PostgreSQL
-npm run docker:up
-
-# Parar containers
-npm run docker:down
-
-# Ver logs do PostgreSQL
-npm run docker:logs
-
-# Reset completo (apaga dados)
-npm run docker:reset
-```
-
 ## 📋 API Endpoints
+
+Todas as rotas podem ser testadas via Postman, usando o arquivo `.env` para configurar o host e porta.
 
 ### Health Check
 
@@ -126,155 +95,201 @@ npm run docker:reset
 ### Users
 
 - **POST** `/api/users` - Criar novo usuário
+  - **Body:**
+    ```json
+    {
+      "name": "João Silva",
+      "email": "joao@exemplo.com",
+      "phone": "(11) 99999-9999",
+      "role": "admin",
+      "department": "TI",
+      "last_login": "2025-08-18T10:00:00.000Z",
+      "status": "active",
+      "created_at": "2025-08-18T10:00:00.000Z",
+      "updated_at": "2025-08-18T10:00:00.000Z"
+    }
+    ```
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "User created successfully",
+      "data": {
+        /* dados do usuário */
+      }
+    }
+    ```
 - **GET** `/api/users` - Listar usuários
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "Users found",
+      "data": [
+        /* lista de usuários */
+      ]
+    }
+    ```
 - **GET** `/api/users/:id` - Buscar usuário por ID
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "User found",
+      "data": {
+        /* dados do usuário */
+      }
+    }
+    ```
 - **PATCH** `/api/users/:id` - Atualizar usuário
+  - **Body:**
+    ```json
+    {
+      "name": "Novo Nome",
+      "email": "novo@email.com",
+      "phone": "(11) 98888-8888",
+      "role": "user",
+      "department": "Financeiro",
+      "last_login": "2025-08-18T12:00:00.000Z",
+      "status": "inactive",
+      "created_at": "2025-08-18T10:00:00.000Z",
+      "updated_at": "2025-08-18T12:00:00.000Z"
+    }
+    ```
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "User updated successfully",
+      "data": {
+        /* dados do usuário atualizado */
+      }
+    }
+    ```
+- **DELETE** `/api/users/:id` - Deletar usuário
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "User deleted successfully"
+    }
+    ```
 
 ### Tickets
 
 - **POST** `/api/tickets` - Criar novo ticket
+  - **Body:**
+    ```json
+    {
+      "user_id": "clx1234567890",
+      "message": "Problema com o sistema de login",
+      "status": "open",
+      "priority": "high",
+      "category": "sistema",
+      "assigned_to": "clx0987654321",
+      "source": "web",
+      "escalation_level": "2",
+      "created_at": "2025-08-18T10:00:00.000Z",
+      "updated_at": "2025-08-18T10:00:00.000Z",
+      "resolved_at": null,
+      "resolution_notes": null
+    }
+    ```
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "Ticket criado com sucesso",
+      "data": {
+        /* dados do ticket */
+      }
+    }
+    ```
 - **GET** `/api/tickets` - Listar tickets (com filtros opcionais)
+  - **Query params:**
+    - `status`, `priority`, `category`, `assigned_to`, `user_id`, `page`, `limit`
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "Tickets encontrados",
+      "data": {
+        "tickets": [
+          /* lista de tickets */
+        ],
+        "pagination": { "page": 1, "limit": 10, "total": 100, "totalPages": 10 }
+      }
+    }
+    ```
 - **GET** `/api/tickets/:id` - Buscar ticket por ID
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "Ticket encontrado",
+      "data": {
+        /* dados do ticket */
+      }
+    }
+    ```
 - **PATCH** `/api/tickets/:id/status` - Atualizar status do ticket
+  - **Body:**
+    ```json
+    {
+      "status": "resolved"
+    }
+    ```
+  - **Resposta:**
+    ```json
+    {
+      "success": true,
+      "message": "Status do ticket atualizado com sucesso",
+      "data": {
+        /* dados do ticket atualizado */
+      }
+    }
+    ```
 
 #### Parâmetros de filtro para GET /api/tickets:
 
-- `status`: open, in_progress, resolved, closed
+- `status`: open, in_progress, resolved, closed, pending, escalated
 - `priority`: low, normal, high, urgent
-- `userId`: ID do usuário
+- `category`: string
+- `assigned_to`: uuid
+- `user_id`: uuid
 - `page`: Número da página (padrão: 1)
 - `limit`: Itens por página (padrão: 10, máximo: 100)
 
-#### Exemplo de criação de usuário:
-
-```json
-POST /api/users
-{
-  "name": "João Silva",
-  "email": "joao@exemplo.com",
-  "phone": "(11) 99999-9999"
-}
-```
-
-#### Exemplo de criação de ticket:
-
-```json
-POST /api/tickets
-{
-  "userId": "clx1234567890",
-  "message": "Problema com o sistema de login",
-  "priority": "high"
-}
-```
-
-## 🧪 Testando com Postman
-
-### URLs para teste local:
-
-- **Base URL**: `http://localhost:5000`
-- **Health Check**: `GET http://localhost:5000/healthcheck`
-- **Users API**: `http://localhost:5000/api/users`
-- **Tickets API**: `http://localhost:5000/api/tickets`
-
-### Workflow de teste:
+### Workflow de teste via Postman:
 
 1. Verificar health check
-2. Criar um usuário
-3. Criar tickets usando o `userId` retornado
-4. Listar tickets e usuários
-
-## 🗄️ Banco de Dados
-
-### Configuração PostgreSQL (Docker):
-
-- **Host**: localhost
-- **Port**: 5432
-- **Database**: nexti_db
-- **Username**: nexti_user
-- **Password**: nexti_password
-
-### Ferramentas recomendadas:
-
-- **Prisma Studio**: `npm run db:studio` (http://localhost:5555)
-- **Postbird**: Cliente PostgreSQL visual
-- **pgAdmin**: Interface web completa
+2. Criar um usuário (POST /api/users)
+3. Criar tickets usando o `user_id` retornado (POST /api/tickets)
+4. Listar tickets e usuários (GET /api/tickets, GET /api/users)
+5. Atualizar status do ticket (PATCH /api/tickets/:id/status)
+6. Testar filtros e paginação
 
 ## 🚀 Deploy no Render
 
-### 1. Prepare o repositório
-
-Certifique-se de que:
-
-- O código está no GitHub/GitLab
-- O arquivo `.env.example` está commitado
-- O `Dockerfile` está configurado
-
-### 2. Configure o banco de dados
-
-**Opção 1: PostgreSQL no Render**
-
-1. Crie um PostgreSQL database no Render
-2. Use a URL de conexão interna fornecida
-
-**Opção 2: Banco externo**
-
-- Use serviços como Supabase, Railway, ou Neon
-- Configure a `DATABASE_URL` com a string de conexão
-
-### 3. Configure o serviço no Render
-
-1. Crie uma nova **Web Service** no [Render](https://render.com)
-2. Conecte seu repositório
-3. Configure:
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-   - **Docker**: Se preferir usar o Dockerfile
-
-### 4. Configure as variáveis de ambiente
-
-No painel do Render, adicione:
+1. Suba o código para o GitHub
+2. Configure as variáveis de ambiente no painel do Render:
 
 ```
+API_HOST=https://nexti-api.onrender.com
 PORT=10000
-DATABASE_URL=postgresql://user:pass@host:port/database?schema=public
-N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/tickets
-NODE_ENV=production
+SUPABASE_URL=...
+SUPABASE_KEY=...
+N8N_WEBHOOK_URL=...
 ```
 
-### 5. Execute as migrações
-
-Após o primeiro deploy:
-
-```bash
-# Via Render Shell
-npx prisma migrate deploy
-```
-
-## 🔧 Scripts Disponíveis
-
-### Desenvolvimento
-
-- `npm run dev` - Executa em modo desenvolvimento com hot reload
-- `npm run build` - Compila o TypeScript
-- `npm start` - Executa a versão compilada
-
-### Banco de dados
-
-- `npm run db:generate` - Gera o cliente Prisma
-- `npm run db:migrate` - Executa migrações em desenvolvimento
-- `npm run db:studio` - Abre interface visual do banco
-- `npm run db:reset` - Reset completo do banco
-
-### Docker
-
-- `npm run docker:up` - Subir PostgreSQL
-- `npm run docker:down` - Parar containers
-- `npm run docker:logs` - Ver logs do PostgreSQL
-- `npm run docker:reset` - Reset completo (apaga dados)
+3. Configure build/start:
+   - Build: `npm install && npm run build`
+   - Start: `npm start`
+4. Após deploy, use o link do Render como base para o Postman e clientes.
 
 ## 🔗 Integração com n8n
 
-O sistema envia automaticamente os tickets criados para um webhook do n8n. Configure a URL do webhook na variável `N8N_WEBHOOK_URL`.
+O sistema envia automaticamente os tickets criados para um webhook do n8n. Configure a URL do webhook na variável `N8N_WEBHOOK_URL` no `.env` e no Render.
 
 **Payload enviado:**
 
@@ -307,35 +322,11 @@ O sistema envia automaticamente os tickets criados para um webhook do n8n. Confi
 Para expandir o sistema, considere implementar:
 
 1. **Autenticação de Usuários**
-
-   - `POST /auth/login` - Login
-   - `POST /auth/register` - Registro
-   - `POST /auth/refresh` - Refresh token
-
 2. **Comentários em Tickets**
-
-   - `POST /api/tickets/:id/comments` - Adicionar comentário
-   - `GET /api/tickets/:id/comments` - Listar comentários
-
 3. **Anexos**
-
-   - `POST /api/tickets/:id/attachments` - Upload de arquivo
-   - `GET /api/attachments/:id` - Download de arquivo
-
 4. **Relatórios**
-
-   - `GET /api/reports/tickets` - Relatório de tickets
-   - `GET /api/reports/users` - Relatório de usuários
-
 5. **WebSocket para atualizações em tempo real**
-
-   - Notificações de novos tickets
-   - Atualizações de status
-
 6. **Filtros Avançados**
-   - Busca por texto
-   - Filtros por data
-   - Ordenação customizada
 
 ## 🔒 Segurança
 

@@ -65,13 +65,13 @@ async function setupServer() {
 async function startServer() {
   try {
     const port = Number(process.env.PORT) || 3000;
-    const host = process.env.HOST || '0.0.0.0';
+    const host = process.env.API_HOST || '0.0.0.0';
 
     await server.listen({ port, host });
-    console.log(`🌟 Servidor rodando em http://${host}:${port}`);
-    console.log(`📋 Health check disponível em http://${host}:${port}/healthcheck`);
-    console.log(`🎫 API de tickets disponível em http://${host}:${port}/api/tickets`);
-    console.log(`👥 API de usuários disponível em http://${host}:${port}/api/users`);
+    console.log(`🌟 Servidor rodando em ${host}:${port}`);
+    console.log(`📋 Health check disponível em ${host}:${port}/healthcheck`);
+    console.log(`🎫 API de tickets disponível em ${host}:${port}/api/tickets`);
+    console.log(`👥 API de usuários disponível em ${host}:${port}/api/users`);
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);
     process.exit(1);

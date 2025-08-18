@@ -1,28 +1,21 @@
-import { supabase } from '@/lib/supabase';
 import axios from 'axios';
+import { TicketRepository } from '../repositories/ticket.repository';
 import { CreateTicketType, TicketFiltersType, UpdateTicketStatusType } from '../schemas/ticket.schema';
 
 /**
  * Service para gerenciar tickets usando Supabase
  */
 export class TicketService {
+  private repository: TicketRepository;
+
+  constructor() {
+    this.repository = new TicketRepository();
+  }
   /**
    * Cria um novo ticket na tabela 'tickets' e envia para o webhook do n8n
    */
   async createTicket(data: CreateTicketType) {
-    // Insere um novo ticket na tabela 'tickets'
-    const { data: ticket, error } = await supabase
-      .from('tickets')
-      .insert([{
-        user_id: data.userId,
-        message: data.message,
-        priority: data.priority || 'normal',
-        status: 'open',
-      }])
-      .select()
-      .single();
-    if (error) throw new Error('Erro ao criar ticket: ' + error.message);
-    // Envia para o webhook do n8n (se configurado)
+    const ticket = await this.repository.createTicket(data);
     await this.sendToN8nWebhook(ticket);
     return ticket;
   }
@@ -31,21 +24,11 @@ export class TicketService {
    * Busca todos os tickets com filtros opcionais
    */
   async getTickets(filters: TicketFiltersType) {
-    // Monta filtros para consulta e paginação
     const page = Number(filters.page) || 1;
     const limit = Number(filters.limit) || 10;
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    let query = supabase
-      .from('tickets')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to);
-    if (filters.status) query = query.eq('status', filters.status);
-    if (filters.priority) query = query.eq('priority', filters.priority);
-    if (filters.userId) query = query.eq('user_id', filters.userId);
-    const { data: tickets, error, count } = await query;
-    if (error) throw new Error('Erro ao buscar tickets: ' + error.message);
+    const { tickets, count } = await this.repository.getTickets(filters, from, to);
     return {
       tickets,
       pagination: {
@@ -61,27 +44,14 @@ export class TicketService {
    * Busca um ticket específico por ID
    */
   async getTicketById(id: string) {
-    const { data: ticket, error } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (error || !ticket) throw new Error('Ticket não encontrado');
-    return ticket;
+    return this.repository.getTicketById(id);
   }
 
   /**
    * Atualiza o status de um ticket
    */
   async updateTicketStatus(id: string, data: UpdateTicketStatusType) {
-    const { data: ticket, error } = await supabase
-      .from('tickets')
-      .update({ status: data.status })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw new Error('Erro ao atualizar ticket: ' + error.message);
-    return ticket;
+    return this.repository.updateTicketStatus(id, data);
   }
 
   /**
