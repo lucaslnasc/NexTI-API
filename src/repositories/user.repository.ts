@@ -17,14 +17,16 @@ export class UserRepository {
         phone: data.phone,
         role: data.role,
         department: data.department,
-        status: data.status,
-        last_login: data.last_login,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        status: data.status
       }])
       .select()
       .single();
-    if (error) throw new Error('Erro ao criar usuário: ' + error.message);
+    if (error) {
+      if (error.message.includes('users_email_key')) {
+        throw new Error('E-mail já existente no sistema');
+      }
+      throw new Error('Erro ao criar usuário: ' + error.message);
+    }
     return user;
   }
 

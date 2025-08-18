@@ -9,10 +9,7 @@ export const createUserSchema = z.object({
   phone: z.string().optional(),
   role: z.string().optional(),
   department: z.string().optional(),
-  last_login: z.string().datetime().optional(),
   status: z.string().optional(),
-  created_at: z.string().datetime().optional(),
-  updated_at: z.string().datetime().optional(),
 });
 
 /**
