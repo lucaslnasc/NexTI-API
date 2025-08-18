@@ -11,7 +11,17 @@ export class UserRepository {
   async create(data: CreateUserType) {
     const { data: user, error } = await supabase
       .from('users')
-      .insert([{ name: data.name, email: data.email, phone: data.phone }])
+      .insert([{
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        department: data.department,
+        status: data.status,
+        last_login: data.last_login,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      }])
       .select()
       .single();
     if (error) throw new Error('Erro ao criar usuário: ' + error.message);
