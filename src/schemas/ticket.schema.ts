@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 // Enum para status de ticket
 export const ticketStatusEnum = z.enum([
   'open',
@@ -16,7 +18,6 @@ export const ticketPriorityEnum = z.enum([
   'urgent'
 ]);
 
-import { z } from 'zod';
 
 /**
  * Schema para criação de um novo ticket
