@@ -43,10 +43,10 @@ async function setupServer() {
 
     // Registra as rotas
     await server.register(healthRoutes);
-    await server.register(ticketRoutes);
+    await server.register(ticketRoutes, { prefix: '/api' });
     await server.register(interactionRoutes);
     await server.register(ticketHistoryRoutes);
-    await server.register(userRoutes);
+    await server.register(userRoutes, { prefix: '/api' });
 
     console.log('🚀 Servidor configurado com sucesso');
   } catch (error) {

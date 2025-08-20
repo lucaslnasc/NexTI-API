@@ -1,6 +1,6 @@
 // Repositório responsável por acessar o banco de dados para entidades de usuário
 // Aqui ficam apenas as operações diretas com o Prisma
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
 import { CreateUserType, UpdateUserType } from '../schemas/user.schema';
 
 /**
@@ -34,21 +34,36 @@ export class UserRepository {
 
   /** Busca todos os usuários */
   async findAll() {
+    console.log('🔗 Executando consulta findAll no Supabase...');
+    
     const { data: users, error } = await supabase
       .from('users')
       .select('id, name, email, phone, role, department, last_login, status, created_at, updated_at')
       .order('created_at', { ascending: false });
+      
+    console.log('📊 Resultado da consulta:');
+    console.log('- Error:', error);
+    console.log('- Data:', users);
+    console.log('- Data length:', users?.length);
+    
     if (error) throw new Error('Erro ao buscar usuários: ' + error.message);
     return users;
   }
 
   /** Busca usuário por ID */
   async findById(id: string) {
+    console.log('🔗 Executando consulta findById no Supabase para ID:', id);
+    
     const { data: user, error } = await supabase
       .from('users')
       .select('id, name, email, phone, role, department, last_login, status, created_at, updated_at')
       .eq('id', id)
       .single();
+      
+    console.log('📊 Resultado da consulta findById:');
+    console.log('- Error:', error);
+    console.log('- Data:', user);
+    
     if (error || !user) throw new Error('Usuário não encontrado');
     return user;
   }

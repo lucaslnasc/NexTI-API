@@ -64,16 +64,23 @@ export async function createUserController(request: FastifyRequest, reply: Fasti
  */
 export async function getUsersController(request: FastifyRequest, reply: FastifyReply) {
   try {
+    console.log('📋 Buscando usuários...');
+    
     // Busca usuários via usecase
     const users = await userUseCase.getUsers();
+    
+    console.log('✅ Usuários encontrados:', users?.length || 0);
+    console.log('📄 Dados dos usuários:', JSON.stringify(users, null, 2));
 
     // Resposta de sucesso
     return reply.send({
       success: true,
-      message: `${users.length} usuários encontrados`,
-      data: users,
+      message: `${users?.length || 0} usuários encontrados`,
+      data: users || [],
     });
   } catch (error: any) {
+    console.error('❌ Erro ao buscar usuários:', error);
+    
     // Tratamento de erro
     return reply.status(500).send({
       success: false,
@@ -94,9 +101,12 @@ export async function getUserByIdController(
 ) {
   try {
     const { id } = request.params;
+    console.log('🔍 Buscando usuário por ID:', id);
 
     // Busca usuário via usecase
     const user = await userUseCase.getUserById(id);
+    
+    console.log('✅ Usuário encontrado:', JSON.stringify(user, null, 2));
 
     // Resposta de sucesso
     return reply.send({
@@ -105,6 +115,8 @@ export async function getUserByIdController(
       data: user,
     });
   } catch (error: any) {
+    console.error('❌ Erro ao buscar usuário por ID:', error);
+    
     // Erro de não encontrado
     if (error.message === 'User not found') {
       return reply.status(404).send({
