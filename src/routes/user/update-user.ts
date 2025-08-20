@@ -1,8 +1,38 @@
-import { FastifyInstance } from 'fastify';
-// Rota para atualizar usuário
-import { UserController } from '../../controllers/user.controller';
-const userController = new UserController();
+import { updateUserController } from '../../controllers/user.controller';
 
-export async function updateUser(app: FastifyInstance) {
-  app.patch('/api/users/:id', userController.updateUser.bind(userController));
-}
+/**
+ * Handler para atualizar usuário
+ * PUT /users/:id
+ */
+export const updateUserHandler = {
+  schema: {
+    description: 'Atualiza um usuário existente',
+    tags: ['users'],
+    params: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'string', format: 'uuid', description: 'ID do usuário' },
+      },
+    },
+    body: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Nome do usuário' },
+        email: { type: 'string', format: 'email', description: 'Email do usuário' },
+        phone: { type: 'string', description: 'Telefone do usuário' },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+          data: { type: 'object' },
+        },
+      },
+    },
+  },
+  handler: updateUserController,
+};

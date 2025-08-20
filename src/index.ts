@@ -2,12 +2,10 @@ import cors from '@fastify/cors';
 import 'dotenv/config';
 import Fastify from 'fastify';
 import { healthRoutes } from './routes/health.routes';
+import { interactionRoutes } from './routes/interaction.routes';
 import { ticketRoutes } from './routes/ticket.routes';
-import { createUser } from './routes/user/create-user';
-import { deleteUser } from './routes/user/delete-user';
-import { getUserById } from './routes/user/get-user-by-id';
-import { getUsers } from './routes/user/get-users';
-import { updateUser } from './routes/user/update-user';
+import { ticketHistoryRoutes } from './routes/ticket_history.routes';
+import { userRoutes } from './routes/user.routes';
 import { testDatabaseConnection } from './services/database.service';
 
 /**
@@ -46,11 +44,9 @@ async function setupServer() {
     // Registra as rotas
     await server.register(healthRoutes);
     await server.register(ticketRoutes);
-    await server.register(createUser);
-    await server.register(getUsers);
-    await server.register(getUserById);
-    await server.register(updateUser);
-    await server.register(deleteUser);
+    await server.register(interactionRoutes);
+    await server.register(ticketHistoryRoutes);
+    await server.register(userRoutes);
 
     console.log('🚀 Servidor configurado com sucesso');
   } catch (error) {
@@ -71,7 +67,9 @@ async function startServer() {
     console.log(`🌟 Servidor rodando em http://${host}:${port}`);
     console.log(`📋 Health check disponível em http://${host}:${port}/healthcheck`);
     console.log(`🎫 API de tickets disponível em http://${host}:${port}/api/tickets`);
-    console.log(`👥 API de usuários disponível em http://${host}:${port}/api/users`);
+    console.log(`� API de interações disponível em http://${host}:${port}/interactions`);
+    console.log(`📜 API de histórico disponível em http://${host}:${port}/ticket-history`);
+    console.log(`�👥 API de usuários disponível em http://${host}:${port}/api/users`);
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);
     process.exit(1);

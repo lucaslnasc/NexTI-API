@@ -1,8 +1,23 @@
-import { FastifyInstance } from 'fastify';
-// Rota para listar usuários
-import { UserController } from '../../controllers/user.controller';
-const userController = new UserController();
+import { getUsersController } from '../../controllers/user.controller';
 
-export async function getUsers(app: FastifyInstance) {
-  app.get('/api/users', userController.getUsers.bind(userController));
-}
+/**
+ * Handler para listar usuários
+ * GET /users
+ */
+export const getUsersHandler = {
+  schema: {
+    description: 'Lista todos os usuários',
+    tags: ['users'],
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+          data: { type: 'array', items: { type: 'object' } },
+        },
+      },
+    },
+  },
+  handler: getUsersController,
+};

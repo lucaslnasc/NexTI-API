@@ -1,8 +1,30 @@
-import { FastifyInstance } from 'fastify';
-// Rota para buscar usuário por ID
-import { UserController } from '../../controllers/user.controller';
-const userController = new UserController();
+import { getUserByIdController } from '../../controllers/user.controller';
 
-export async function getUserById(app: FastifyInstance) {
-  app.get('/api/users/:id', userController.getUserById.bind(userController));
-}
+/**
+ * Handler para buscar usuário por ID
+ * GET /users/:id
+ */
+export const getUserByIdHandler = {
+  schema: {
+    description: 'Busca um usuário pelo ID',
+    tags: ['users'],
+    params: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'string', format: 'uuid', description: 'ID do usuário' },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+          data: { type: 'object' },
+        },
+      },
+    },
+  },
+  handler: getUserByIdController,
+};

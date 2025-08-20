@@ -1,8 +1,29 @@
-import { FastifyInstance } from 'fastify';
-// Rota para deletar usuário
-import { UserController } from '../../controllers/user.controller';
-const userController = new UserController();
+import { deleteUserController } from '../../controllers/user.controller';
 
-export async function deleteUser(app: FastifyInstance) {
-  app.delete('/api/users/:id', userController.deleteUser.bind(userController));
-}
+/**
+ * Handler para deletar usuário
+ * DELETE /users/:id
+ */
+export const deleteUserHandler = {
+  schema: {
+    description: 'Deleta um usuário',
+    tags: ['users'],
+    params: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'string', format: 'uuid', description: 'ID do usuário' },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+        },
+      },
+    },
+  },
+  handler: deleteUserController,
+};
