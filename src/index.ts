@@ -67,9 +67,9 @@ async function startServer() {
     console.log(`🌟 Servidor rodando em http://${host}:${port}`);
     console.log(`📋 Health check disponível em http://${host}:${port}/healthcheck`);
     console.log(`🎫 API de tickets disponível em http://${host}:${port}/api/tickets`);
-    console.log(`� API de interações disponível em http://${host}:${port}/interactions`);
+    console.log(`💬 API de interações disponível em http://${host}:${port}/interactions`);
     console.log(`📜 API de histórico disponível em http://${host}:${port}/ticket-history`);
-    console.log(`�👥 API de usuários disponível em http://${host}:${port}/api/users`);
+    console.log(`👥 API de usuários disponível em http://${host}:${port}/api/users`);
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);
     process.exit(1);
