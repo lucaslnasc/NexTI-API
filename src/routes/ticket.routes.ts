@@ -6,8 +6,8 @@ import { listTicketsHandler } from './ticket/list-tickets';
 import { updateTicketStatusHandler } from './ticket/update-ticket-status';
 
 export async function ticketRoutes(fastify: FastifyInstance) {
-  fastify.post('/api/tickets', createTicketHandler);
-  fastify.get('/api/tickets', listTicketsHandler);
-  fastify.get('/api/tickets/:id', getTicketByIdHandler);
-  fastify.patch('/api/tickets/:id/status', updateTicketStatusHandler);
+  fastify.post('/tickets', createTicketHandler);
+  fastify.get('/tickets', listTicketsHandler);
+  fastify.get('/tickets/:id', getTicketByIdHandler);
+  fastify.patch('/tickets/:id/status', updateTicketStatusHandler);
 }
