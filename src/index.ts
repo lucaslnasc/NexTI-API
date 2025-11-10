@@ -44,8 +44,8 @@ async function setupServer() {
     // Registra as rotas
     await server.register(healthRoutes);
     await server.register(ticketRoutes, { prefix: '/api' });
-    await server.register(interactionRoutes);
-    await server.register(ticketHistoryRoutes);
+    await server.register(interactionRoutes, { prefix: '/api' });
+    await server.register(ticketHistoryRoutes, { prefix: '/api' });
     await server.register(userRoutes, { prefix: '/api' });
 
     console.log('🚀 Servidor configurado com sucesso');
@@ -61,14 +61,18 @@ async function setupServer() {
 async function startServer() {
   try {
     const port = Number(process.env.PORT) || 3000;
-    const host = process.env.HOST || '0.0.0.0';
+    const host = '0.0.0.0';
+
+    console.log(`🔧 Tentando iniciar servidor em ${host}:${port}`);
+    console.log(`🔧 PORT environment variable: ${process.env.PORT}`);
 
     await server.listen({ port, host });
+
     console.log(`🌟 Servidor rodando em http://${host}:${port}`);
     console.log(`📋 Health check disponível em http://${host}:${port}/healthcheck`);
     console.log(`🎫 API de tickets disponível em http://${host}:${port}/api/tickets`);
-    console.log(`💬 API de interações disponível em http://${host}:${port}/interactions`);
-    console.log(`📜 API de histórico disponível em http://${host}:${port}/ticket-history`);
+    console.log(`💬 API de interações disponível em http://${host}:${port}/api/interactions`);
+    console.log(`📜 API de histórico disponível em http://${host}:${port}/api/ticket-history`);
     console.log(`👥 API de usuários disponível em http://${host}:${port}/api/users`);
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);

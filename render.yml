@@ -6,8 +6,6 @@ services:
     buildCommand: npm run render:build
     startCommand: npm start
     envVars:
-      - key: PORT
-        value: 5000
       - key: NODE_ENV
         value: production
       - key: SUPABASE_URL
@@ -20,4 +18,4 @@ services:
     repo: https://github.com/lucaslnasc/NexTI
     branch: main
     rootDir: .
-    healthCheckPath: /health
+    healthCheckPath: /healthcheck
